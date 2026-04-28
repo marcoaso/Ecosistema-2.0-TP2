@@ -51,7 +51,8 @@
       <groupId>es.ucm.fdi.tp</groupId>
       <artifactId>viewer</artifactId>
       <version>1.0.0</version>
-      <scope>compile</scope>
+      <scope>system</scope>
+      <systemPath>${pom.basedir}/lib/viewer.jar</systemPath> <!-- ignore "must be an absolute path" error -->
     </dependency>
     <!-- TEST DEPENDENCIES -->
     <dependency>
