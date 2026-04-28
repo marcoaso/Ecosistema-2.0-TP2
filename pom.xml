@@ -94,7 +94,7 @@
       <phase>package</phase>
       <goals>
         <goal>single</goal>
-      </goals>
+      </goals>gh
       <configuration>
         <!-- this block tells assembly plugin to build an executable JAR -->
         <archive>
