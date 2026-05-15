@@ -14,13 +14,32 @@ import simulator.model.MapInfo.RegionData;
 
 class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
 
-    private Controller ctrl;
-    private List<RegionData> regions;
-    private MapInfo map;
-    private String[] columnNames = { "Row", "Column", "Region Type" };
+    /**
+     * Representa la información de una fila. Desacopla la tabla de 
+     * los objetos RegionInfo y RegionData del modelo.
+     */
+    private class RegionTableModelRow {
+        private int row, col;
+        private String desc;
+        private int[] dietCounts;
+
+        RegionTableModelRow(RegionData rd) {
+            this.row = rd.row();
+            this.col = rd.col();
+            this.desc = rd.r().toString();
+            this.dietCounts = new int[Diet.values().length];
+            
+            // Adaptamos la información: contamos animales por dieta en la región
+            for (AnimalInfo a : rd.r().getAnimalsInfo()) {
+                this.dietCounts[a.getDiet().ordinal()]++;
+            }
+        }
+    }
+
+    private List<RegionTableModelRow> regions;
+    private String[] columnNames;
 
     RegionsTableModel(Controller ctrl) {
-        this.ctrl = ctrl;
         this.regions = new ArrayList<>();
 
         Diet[] diets = Diet.values();
@@ -31,11 +50,9 @@ class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
         for (int i = 0; i < diets.length; i++) {
             this.columnNames[i + 3] = diets[i].name();
         }
-        // Nos registramos como observadores
-        this.ctrl.addObserver(this);
-    }
 
-    // --- Métodos de AbstractTableModel ---
+        ctrl.addObserver(this);
+    }
 
     @Override
     public int getRowCount() {
@@ -54,66 +71,33 @@ class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        RegionData rd = regions.get(rowIndex);
-
+        RegionTableModelRow row = regions.get(rowIndex);
         switch (columnIndex) {
-            case 0:
-                return rd.row();
-            case 1:
-                return rd.col();
-            case 2:
-                return rd.r().toString();
+            case 0: return row.row;
+            case 1: return row.col;
+            case 2: return row.desc;
             default:
-                // Contar animales de esta región por dieta
-                Diet diet = Diet.values()[columnIndex - 3];
-                int count = 0;
-                for (AnimalInfo a : rd.r().getAnimalsInfo()) {
-                    if (a.getDiet() == diet) {
-                        count++;
-                    }
-                }
-                return count;
+                return row.dietCounts[columnIndex - 3];
         }
     }
 
-    // --- Lógica de actualización (EcoSysObserver) ---
-
     private void update(MapInfo map) {
-        this.map = map;
-        this.regions.clear();
-
-        // Como MapInfo implementa Iterable<MapInfo.RegionData>,
-        // ahora el for funciona perfectamente
+        this.regions = new ArrayList<>();
+        // El modelo nos da un iterable de RegionData, nosotros lo adaptamos a filas privadas
         for (RegionData rd : map) {
-            this.regions.add(rd);
+            this.regions.add(new RegionTableModelRow(rd));
         }
-
-        // Notificamos el cambio a la tabla
         fireTableDataChanged();
     }
 
     @Override
-    public void onRegister(double time, MapInfo map, List<AnimalInfo> animals) {
-        update(map);
-    }
-
+    public void onRegister(double time, MapInfo map, List<AnimalInfo> animals) { update(map); }
     @Override
-    public void onReset(double time, MapInfo map, List<AnimalInfo> animals) {
-        update(map);
-    }
-
+    public void onReset(double time, MapInfo map, List<AnimalInfo> animals) { update(map); }
     @Override
-    public void onAnimalAdded(double time, MapInfo map, List<AnimalInfo> animals, AnimalInfo a) {
-        update(map);
-    }
-
+    public void onAnimalAdded(double time, MapInfo map, List<AnimalInfo> animals, AnimalInfo a) { update(map); }
     @Override
-    public void onAdvance(double time, MapInfo map, List<AnimalInfo> animals, double dt) {
-        update(map);
-    }
-
+    public void onAdvance(double time, MapInfo map, List<AnimalInfo> animals, double dt) { update(map); }
     @Override
-    public void onRegionSet(int row, int col, MapInfo map, RegionInfo r) {
-        update(map); // Si cambia una región específica, refrescamos la tabla
-    }
+    public void onRegionSet(int row, int col, MapInfo map, RegionInfo r) { update(map); }
 }

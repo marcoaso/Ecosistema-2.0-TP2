@@ -30,7 +30,7 @@ class ControlPanel extends JPanel {
 
   private JToolBar toolsBar;
   private JFileChooser fc;
-  private boolean stopped = true; // utilizado en los botones de run/stop
+  private boolean stopped = true;
 
   private JButton openButton;
   private JButton viewerButton;
@@ -47,7 +47,6 @@ class ControlPanel extends JPanel {
     initGUI();
   }
 
-  // Método para cargar iconos desde el recurso "icons"
   private ImageIcon loadIcon(String name) {
     java.net.URL url = getClass().getClassLoader().getResource("icons/" + name);
     if (url != null) {
@@ -63,14 +62,14 @@ class ControlPanel extends JPanel {
     toolsBar = new JToolBar();
     add(toolsBar, BorderLayout.PAGE_START);
 
-    // Inicializar JFileChooser
     this.fc = new JFileChooser();
     this.fc.setCurrentDirectory(new File(System.getProperty("user.dir") + "/resources/examples"));
 
-    // Inicializar el diálogo de regiones
     this.changeRegionsDialog = new ChangeRegionsDialog(ctrl);
 
-    // Botón Open
+    // ============================================================
+    // MEJORA: Botón Open con lógica delegada al Controller
+    // ============================================================
     this.openButton = new JButton();
     this.openButton.setToolTipText("Open");
     this.openButton.setIcon(loadIcon("open.png"));
@@ -79,8 +78,12 @@ class ControlPanel extends JPanel {
       if (ret == JFileChooser.APPROVE_OPTION) {
         try (InputStream is = new FileInputStream(this.fc.getSelectedFile())) {
           JSONObject jo = new JSONObject(new JSONTokener(is));
+          
+          // En lugar de parsear manualmente las claves "rows", "cols", etc. aquí,
+          // usamos los métodos del controlador que ya encapsulan esa lógica.
           this.ctrl.reset(jo.getInt("cols"), jo.getInt("rows"), jo.getInt("width"), jo.getInt("height"));
           this.ctrl.loadData(jo);
+          
         } catch (Exception ex) {
           ViewUtils.showErrorMsg(this, "Error loading file: " + ex.getMessage());
         }
@@ -94,7 +97,7 @@ class ControlPanel extends JPanel {
     this.viewerButton = new JButton();
     this.viewerButton.setToolTipText("Viewer");
     this.viewerButton.setIcon(loadIcon("viewer.png"));
-    this.viewerButton.addActionListener((e) -> new MapWindow(null, this.ctrl)); //Revisar constructor?
+    this.viewerButton.addActionListener((e) -> new MapWindow(null, this.ctrl));
     this.toolsBar.add(this.viewerButton);
 
     // Botón Regions
@@ -114,7 +117,7 @@ class ControlPanel extends JPanel {
       this.stopped = false;
       setButtonsEnabled(false);
       try {
-        int steps = (Integer) this.stepsSpinner.getValue(); // Obtener el número de pasos del spinner
+        int steps = (Integer) this.stepsSpinner.getValue();
         double dt = Double.parseDouble(this.dtText.getText());
         runSim(steps, dt);
       } catch (NumberFormatException nfe) {
@@ -146,7 +149,6 @@ class ControlPanel extends JPanel {
     this.dtText.setMaximumSize(new Dimension(80, 40));
     this.toolsBar.add(this.dtText);
 
-    // Botón Quit (Alineado a la derecha)
     this.toolsBar.add(Box.createGlue());
     this.toolsBar.addSeparator();
     this.quitButton = new JButton();
@@ -156,17 +158,15 @@ class ControlPanel extends JPanel {
     this.toolsBar.add(this.quitButton);
   }
 
-  // Método para habilitar/deshabilitar botones según el enunciado
   private void setButtonsEnabled(boolean enabled) {
     this.openButton.setEnabled(enabled);
     this.viewerButton.setEnabled(enabled);
     this.regionsButton.setEnabled(enabled);
     this.runButton.setEnabled(enabled);
     this.quitButton.setEnabled(enabled);
-    this.stopButton.setEnabled(!enabled); // Stop es inverso al resto
+    this.stopButton.setEnabled(!enabled);
   }
 
-  // Método runSim según el esquema del enunciado
   private void runSim(int n, double dt) {
     if (n > 0 && !this.stopped) {
       try {

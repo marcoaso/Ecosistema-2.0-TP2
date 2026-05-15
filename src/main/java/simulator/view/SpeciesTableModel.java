@@ -1,8 +1,8 @@
 package simulator.view;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,31 +17,45 @@ import simulator.model.RegionInfo;
 
 class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
 
-    private Controller ctrl;
-    private List<String> speciesNames;
-    private Map<String, int[]> speciesCounts;
-    private String[] columnNames = { "Species", "Number" };
+    /**
+     * Esta clase actúa como adaptador. La vista solo conoce lo necesario
+     * para pintar la fila, desacoplándose de las interfaces del modelo.
+     */
+    private class SpeciesTableModelRow implements Comparable<SpeciesTableModelRow> {
+        private String speciesName;
+        private int[] counts; // Índices corresponden a State.ordinal()
+
+        SpeciesTableModelRow(String speciesName) {
+            this.speciesName = speciesName;
+            this.counts = new int[State.values().length];
+        }
+
+        @Override
+        public int compareTo(SpeciesTableModelRow o) {
+            return this.speciesName.compareTo(o.speciesName);
+        }
+    }
+
+    private List<SpeciesTableModelRow> rows;
+    private String[] columnNames;
 
     SpeciesTableModel(Controller ctrl) {
-        this.ctrl = ctrl;
-        this.speciesNames = new ArrayList<>();
-        this.speciesCounts = new LinkedHashMap<>();
-
+        this.rows = new ArrayList<>();
+        
+        // Configurar nombres de columnas (Species + Nombres de Estados)
         State[] states = State.values();
         this.columnNames = new String[states.length + 1];
         this.columnNames[0] = "Species";
         for (int i = 0; i < states.length; i++) {
             this.columnNames[i + 1] = states[i].name();
         }
-        // Nos registramos como observadores para recibir datos
-        this.ctrl.addObserver(this);
-    }
 
-    // --- Métodos de AbstractTableModel ---
+        ctrl.addObserver(this);
+    }
 
     @Override
     public int getRowCount() {
-        return speciesNames.size();
+        return rows.size();
     }
 
     @Override
@@ -56,61 +70,41 @@ class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        String species = speciesNames.get(rowIndex);
+        SpeciesTableModelRow row = rows.get(rowIndex);
         if (columnIndex == 0) {
-            return species;
+            return row.speciesName;
         } else {
-            return speciesCounts.get(species)[columnIndex - 1];
+            return row.counts[columnIndex - 1];
         }
     }
 
-    // --- Lógica de actualización (EcoSysObserver) ---
-
     private void update(List<AnimalInfo> animals) {
-        // 1. Limpiamos los datos actuales
-        speciesNames.clear();
-        speciesCounts.clear();
+        // Transformar la información del modelo a nuestra estructura privada de la vista
+        Map<String, SpeciesTableModelRow> map = new HashMap<>();
 
-        State[] states = State.values();
-
-        // 2. Contamos cuántos animales hay de cada especie
         for (AnimalInfo a : animals) {
-            String species = a.getGeneticCode();
-            if (!speciesCounts.containsKey(species)) {
-                speciesNames.add(species);
-                speciesCounts.put(species, new int[states.length]);
+            String gCode = a.getGeneticCode();
+            SpeciesTableModelRow row = map.get(gCode);
+            if (row == null) {
+                row = new SpeciesTableModelRow(gCode);
+                map.put(gCode, row);
             }
-            
-            speciesCounts.get(species) [a.getState().ordinal()]++;
-            
+            row.counts[a.getState().ordinal()]++;
         }
 
-        // 3. Avisamos a la JTable de que los datos han cambiado para que se repinte
+        this.rows = new ArrayList<>(map.values());
+        Collections.sort(this.rows); // Mantenemos el orden alfabético por nombre
         fireTableDataChanged();
     }
 
     @Override
-    public void onRegister(double time, MapInfo map, List<AnimalInfo> animals) {
-        update(animals);
-    }
-
+    public void onRegister(double time, MapInfo map, List<AnimalInfo> animals) { update(animals); }
     @Override
-    public void onReset(double time, MapInfo map, List<AnimalInfo> animals) {
-        update(animals);
-    }
-
+    public void onReset(double time, MapInfo map, List<AnimalInfo> animals) { update(animals); }
     @Override
-    public void onAnimalAdded(double time, MapInfo map, List<AnimalInfo> animals, AnimalInfo a) {
-        update(animals);
-    }
-
+    public void onAnimalAdded(double time, MapInfo map, List<AnimalInfo> animals, AnimalInfo a) { update(animals); }
     @Override
-    public void onAdvance(double time, MapInfo map, List<AnimalInfo> animals, double dt) {
-        update(animals);
-    }
-
+    public void onAdvance(double time, MapInfo map, List<AnimalInfo> animals, double dt) { update(animals); }
     @Override
-    public void onRegionSet(int row, int col, MapInfo map, RegionInfo r) {
-        // El cambio de regiones no afecta al conteo de especies
-    }
+    public void onRegionSet(int row, int col, MapInfo map, RegionInfo r) {}
 }
