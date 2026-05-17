@@ -18,8 +18,8 @@ public abstract class AnimalBuilder extends Builder<Animal> {
     @Override
     protected Animal createInstance(JSONObject data) {
         // 1. Estrategias por defecto
-        SelectionStrategy mateStrategy = new SelectFirst();
-        SelectionStrategy secondStrategy = new SelectFirst();
+        SelectionStrategy mateStrategy = new SelectFirst(); //mate strategy es la estrategia de selección que se usará para elegir a la pareja de apareamiento. Por defecto, se inicializa con SelectFirst, lo que significa que el animal seleccionará la primera pareja disponible sin considerar otras características como la distancia o el nivel de energía. Sin embargo, esta estrategia por defecto puede ser sobrescrita si el JSON de entrada incluye una especificación para la estrategia de apareamiento, permitiendo así una mayor variedad de comportamientos en los animales creados.
+        SelectionStrategy secondStrategy = new SelectFirst(); //second strategy es la estrategia de selección que se usará para elegir a la presa (en el caso de los carnívoros) o a la región más segura (en el caso de los herbívoros). Por defecto, se inicializa también con SelectFirst, lo que significa que el animal seleccionará la primera presa o región segura que encuentre sin considerar otras características como la distancia o el nivel de energía. Sin embargo, esta estrategia por defecto puede ser sobrescrita si el JSON de entrada incluye una especificación para esta segunda estrategia, permitiendo así una mayor variedad de comportamientos en los animales creados.
 
         // 2. Parsear mate_strategy (común a ambos)
         if (data.has("mate_strategy"))

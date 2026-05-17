@@ -119,7 +119,7 @@ public class Simulator implements JSONable, Observable<EcoSysObserver> {
         for (Animal b : newborns) {
             addAnimal(b);
         }
-        notifyOnAdvance(dt);
+        notifyOnAdvance(dt); //Notifica a los observadores que se ha avanzado el tiempo, para que puedan actualizar su estado en consecuencia (por ejemplo, un visor gráfico podría necesitar redibujar la escena con los nuevos estados de los animales y regiones).
     }
 
     //Representación JSON.
@@ -139,7 +139,7 @@ public class Simulator implements JSONable, Observable<EcoSysObserver> {
     }
 
     @Override
-    public void addObserver(EcoSysObserver o) {
+    public void addObserver(EcoSysObserver o) { //Agrega un observador a la lista de observadores. Si el observador es null, no se agrega. Si el observador ya está en la lista, no se agrega de nuevo. Si el observador se agrega correctamente, se le notifica inmediatamente con el estado actual del simulador (tiempo, mapa y animales) para que pueda sincronizarse con la simulación.
         if (o == null) return;
         if (!observers.contains(o)) {
             observers.add(o);
@@ -156,6 +156,8 @@ public class Simulator implements JSONable, Observable<EcoSysObserver> {
             observers.remove(o);
         }
     }
+
+    //Todos los notifyOn... crean una lista de AnimalInfo a partir de la lista de animales vivos (para que los observadores tengan la información actualizada) y luego llaman al método correspondiente de cada observador, pasando el tiempo actual, el regionManager (que contiene la información del mapa) y la lista de animales. Algunos métodos también pasan información adicional relevante para ese evento específico (por ejemplo, el animal que se ha añadido o la región que se ha establecido).
 
     private void notifyOnReset() {
         List<AnimalInfo> animalsInfo = new ArrayList<>(animals);

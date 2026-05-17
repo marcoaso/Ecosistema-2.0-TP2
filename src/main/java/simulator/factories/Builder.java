@@ -2,6 +2,19 @@ package simulator.factories;
 
 import org.json.JSONObject;
 
+/* 
+Clase abstracta que representa un constructor genérico para crear objetos a partir de un JSON. 
+Cada subclase de Builder se especializa en construir un tipo específico de objeto (por ejemplo, animales, estrategias de apareamiento, etc.) y proporciona la lógica necesaria para interpretar el JSON y crear la instancia correspondiente. 
+El método createInstance es abstracto y debe ser implementado por cada subclase para definir cómo se construye el objeto concreto a partir del JSON proporcionado. 
+Además, el método getInfo devuelve un JSON con información sobre el tipo de objeto que construye el builder, su descripción y cualquier dato adicional que pueda ser relevante para entender cómo usarlo.
+*/
+
+/*
+Esta es la clase abstracta de la que heredan todos los constructores.
+El objetivo de un Builder es separar la lectura del JSON de la creación del objeto.
+@param <T> El tipo de objeto que construye (Animal, Region, o SelectionStrategy).
+*/
+
 public abstract class Builder<T> {
     private String typeTag; //Identificador del builder (Sheep, wolf, selectClosest...) que usará BuliderBasedFactory para encontrar el builder correcto.
     private String desc; //Descripción breve.

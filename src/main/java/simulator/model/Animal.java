@@ -7,6 +7,7 @@ import simulator.misc.Vector2D;
 
 public abstract class Animal implements Entity, AnimalInfo {
 
+    //Estados posibles de un animal.
     public enum State {
         NORMAL,
         MATE,
@@ -15,6 +16,7 @@ public abstract class Animal implements Entity, AnimalInfo {
         DEAD
     }
 
+    //Dietas posibles de un animal.
     public enum Diet {
         HERBIVORE,
         CARNIVORE

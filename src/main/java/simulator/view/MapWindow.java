@@ -14,8 +14,11 @@ import simulator.model.RegionInfo;
 
 class MapWindow extends JFrame implements EcoSysObserver {
 
+    // Controlador para registrar/quitar observadores.
     private Controller ctrl;
+    // Componente que dibuja el mapa y animales.
     private AbstractMapViewer viewer;
+    // Ventana padre, usada para centrar esta ventana.
     private Frame parent;
 
     MapWindow(Frame parent, Controller ctrl) {
@@ -23,21 +26,20 @@ class MapWindow extends JFrame implements EcoSysObserver {
         this.ctrl = ctrl;
         this.parent = parent;
         intiGUI();
-        // TODO registrar this como observador
+        // Se registra como observador para recibir eventos del simulador.
         this.ctrl.addObserver(this);
     }
 
     private void intiGUI() {
         JPanel mainPanel = new JPanel(new BorderLayout());
-        // TODO poner contentPane como mainPanel
+        // Panel principal de la ventana.
         setContentPane(mainPanel);
 
-        // TODO crear el viewer y añadirlo a mainPanel (en el centro)
-        // Nota: Se asume que MapViewer es la implementación de AbstractMapViewer
+        // Crea el visor del mapa y lo coloca en el centro.
         this.viewer = new MapViewer();
         mainPanel.add(this.viewer, BorderLayout.CENTER);
 
-        // TODO en el método windowClosing, eliminar ‘MapWindow.this’ de los observadores
+        // Al cerrar, se desregistra para no seguir recibiendo eventos.
         addWindowListener(new WindowListener() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -64,6 +66,7 @@ class MapWindow extends JFrame implements EcoSysObserver {
 
     @Override
     public void onRegister(double time, MapInfo map, List<AnimalInfo> animals) {
+        // Primer pintado cuando la vista se registra en el simulador.
         SwingUtilities.invokeLater(() -> {
             this.viewer.reset(time, map, animals);
             pack();
@@ -72,6 +75,7 @@ class MapWindow extends JFrame implements EcoSysObserver {
 
     @Override
     public void onReset(double time, MapInfo map, List<AnimalInfo> animals) {
+        // Reinicia la vista completa tras un reset del simulador.
         SwingUtilities.invokeLater(() -> {
             this.viewer.reset(time, map, animals);
             pack();
@@ -80,12 +84,13 @@ class MapWindow extends JFrame implements EcoSysObserver {
 
     @Override
     public void onAdvance(double time, MapInfo map, List<AnimalInfo> animals, double dt) {
+        // Actualización normal en cada paso de simulación.
         SwingUtilities.invokeLater(() -> {
             this.viewer.update(animals, time);
         });
     }
 
-    // Métodos obligatorios de la interfaz que no requieren lógica específica según el enunciado
+    // Eventos que esta ventana no necesita tratar.
     @Override public void onAnimalAdded(double time, MapInfo map, List<AnimalInfo> animals, AnimalInfo a) {}
     @Override public void onRegionSet(int row, int col, MapInfo map, RegionInfo r) {}
 }

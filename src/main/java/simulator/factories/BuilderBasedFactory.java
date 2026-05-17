@@ -11,7 +11,7 @@ public class BuilderBasedFactory<T> implements Factory<T> { //Dado un JSON con u
     //Constructor vacío.
     public BuilderBasedFactory() {
         
-        builders = new HashMap<>();
+        builders = new HashMap<>(); //Se usa para almacenar los builders registrados, con su typeTag como clave para facilitar la búsqueda.
         buildersInfo = new LinkedList<>(); //Se usa LinkedList para buildersInfo porque solo se necesita iterar sobre ella y añadir al final, no acceder por índice.
     }
 
@@ -53,8 +53,8 @@ public class BuilderBasedFactory<T> implements Factory<T> { //Dado un JSON con u
 
         if (b != null) {
             JSONObject data = info.has("data")
-                    ? info.getJSONObject("data")
-                    : new JSONObject(); //Si el JSON tiene campo "data" lo usa, si no crea uno vacío.
+                    ? info.getJSONObject("data") //? sirve para asignar a data el valor del campo "data" del JSON si existe, o un JSON vacío si no existe.
+                    : new JSONObject(); //Si el JSON tiene campo "data" lo usa, si no crea uno vacío. : sirve para evitar errores de null al llamar a createInstance, que siempre recibirá un JSON aunque no se haya especificado en el input.
 
             T result = b.createInstance(data); //b es el builder que encontró el HashMap. Se llama a su método createInstance pasándole únicamente el contenido de "data".
 

@@ -18,12 +18,12 @@ import simulator.model.RegionInfo;
 class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
 
     /**
-     * Esta clase actúa como adaptador. La vista solo conoce lo necesario
-     * para pintar la fila, desacoplándose de las interfaces del modelo.
+     * Fila interna de la tabla: especie y conteo por estado.
      */
     private class SpeciesTableModelRow implements Comparable<SpeciesTableModelRow> {
         private String speciesName;
-        private int[] counts; // Índices corresponden a State.ordinal()
+        // counts[i] guarda cuántos animales hay en el estado i.
+        private int[] counts; // i = State.ordinal()
 
         SpeciesTableModelRow(String speciesName) {
             this.speciesName = speciesName;
@@ -32,17 +32,21 @@ class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
 
         @Override
         public int compareTo(SpeciesTableModelRow o) {
+            // Orden alfabético por nombre de especie.
             return this.speciesName.compareTo(o.speciesName);
         }
     }
 
+    // Filas que se muestran en la tabla.
     private List<SpeciesTableModelRow> rows;
+    // Columnas: Species + una columna por cada estado.
     private String[] columnNames;
 
     SpeciesTableModel(Controller ctrl) {
+        // Empieza vacío; se rellenará al recibir eventos.
         this.rows = new ArrayList<>();
         
-        // Configurar nombres de columnas (Species + Nombres de Estados)
+        // Crea nombres de columnas dinámicamente según los estados del enum.
         State[] states = State.values();
         this.columnNames = new String[states.length + 1];
         this.columnNames[0] = "Species";
@@ -50,6 +54,7 @@ class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
             this.columnNames[i + 1] = states[i].name();
         }
 
+        // Se registra para actualizar la tabla cuando cambie el simulador.
         ctrl.addObserver(this);
     }
 
@@ -70,6 +75,7 @@ class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
+        // Devuelve nombre de especie (columna 0) o conteo por estado.
         SpeciesTableModelRow row = rows.get(rowIndex);
         if (columnIndex == 0) {
             return row.speciesName;
@@ -79,7 +85,7 @@ class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
     }
 
     private void update(List<AnimalInfo> animals) {
-        // Transformar la información del modelo a nuestra estructura privada de la vista
+        // Agrupa por especie y cuenta cuántos hay en cada estado.
         Map<String, SpeciesTableModelRow> map = new HashMap<>();
 
         for (AnimalInfo a : animals) {
@@ -93,7 +99,8 @@ class SpeciesTableModel extends AbstractTableModel implements EcoSysObserver {
         }
 
         this.rows = new ArrayList<>(map.values());
-        Collections.sort(this.rows); // Mantenemos el orden alfabético por nombre
+        Collections.sort(this.rows); // Mantiene orden alfabético por especie.
+        // Notifica a la tabla que su contenido se ha actualizado.
         fireTableDataChanged();
     }
 

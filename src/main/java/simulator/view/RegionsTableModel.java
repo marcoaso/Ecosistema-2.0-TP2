@@ -15,8 +15,7 @@ import simulator.model.MapInfo.RegionData;
 class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
 
     /**
-     * Representa la información de una fila. Desacopla la tabla de 
-     * los objetos RegionInfo y RegionData del modelo.
+     * Fila interna de la tabla: posición, descripción y conteo por dieta.
      */
     private class RegionTableModelRow {
         private int row, col;
@@ -29,19 +28,23 @@ class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
             this.desc = rd.r().toString();
             this.dietCounts = new int[Diet.values().length];
             
-            // Adaptamos la información: contamos animales por dieta en la región
+            // Cuenta cuántos animales hay de cada tipo de dieta en esta región.
             for (AnimalInfo a : rd.r().getAnimalsInfo()) {
                 this.dietCounts[a.getDiet().ordinal()]++;
             }
         }
     }
 
+    // Filas que se muestran en la tabla.
     private List<RegionTableModelRow> regions;
+    // Nombres de columnas: Row, Col, Desc y una por cada dieta.
     private String[] columnNames;
 
     RegionsTableModel(Controller ctrl) {
+        // Empieza sin filas; se rellenará al recibir eventos del simulador.
         this.regions = new ArrayList<>();
 
+        // Construye las columnas dinámicamente según las dietas existentes.
         Diet[] diets = Diet.values();
         this.columnNames = new String[diets.length + 3];
         this.columnNames[0] = "Row";
@@ -51,6 +54,7 @@ class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
             this.columnNames[i + 3] = diets[i].name();
         }
 
+        // Se registra para refrescar la tabla cuando cambie el mapa.
         ctrl.addObserver(this);
     }
 
@@ -71,6 +75,7 @@ class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
+        // Devuelve el dato correspondiente a la celda solicitada.
         RegionTableModelRow row = regions.get(rowIndex);
         switch (columnIndex) {
             case 0: return row.row;
@@ -82,11 +87,13 @@ class RegionsTableModel extends AbstractTableModel implements EcoSysObserver {
     }
 
     private void update(MapInfo map) {
+        // Reconstruye todas las filas a partir del estado actual del mapa.
         this.regions = new ArrayList<>();
-        // El modelo nos da un iterable de RegionData, nosotros lo adaptamos a filas privadas
+        // Convierte cada RegionData en una fila interna.
         for (RegionData rd : map) {
             this.regions.add(new RegionTableModelRow(rd));
         }
+        // Notifica a la vista que cambió el contenido completo de la tabla.
         fireTableDataChanged();
     }
 

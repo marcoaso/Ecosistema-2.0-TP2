@@ -37,9 +37,10 @@ public class Sheep extends Animal {
 
     //Constructor de una oveja bebe.
     protected Sheep(Sheep p1, Animal p2) {
-        super(p1, p2);
+        super(p1, p2); //Llama al constructor de Animal para crear una nueva oveja con características heredadas de los padres, como el código genético, la dieta, el rango de visión y la velocidad.
 
-        this.dangerStrategy = p1.dangerStrategy;
+        //Aplico las caracteristicas propias de la oveja.
+        this.dangerStrategy = p1.dangerStrategy;  
         this.dangerSource = null;
     }
 
@@ -47,7 +48,7 @@ public class Sheep extends Animal {
     @Override
     public void update(double dt) {
 
-        super.update(dt);
+        super.update(dt); //LLamo a update de la clase Animal para poner comportamientos comunes.
 
         //Comprueba muerte por falta de energia o por superar la edad maxima.
         if (energy <= 0.0 || age > MAX_AGE_SHEEP) {
